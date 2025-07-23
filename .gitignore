@@ -1,2 +1,11 @@
+# Environment variables
 .env
-.clinerules/global_rules.md
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
