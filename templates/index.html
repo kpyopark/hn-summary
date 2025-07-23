@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hacker News AI/ML Summary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f6f6ef;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #ff6600;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .article {
+            border: 1px solid #eee;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            background-color: #fdfdfd;
+        }
+        .article h2 {
+            margin-top: 0;
+            color: #000;
+        }
+        .article a {
+            color: #000;
+            text-decoration: none;
+        }
+        .article a:hover {
+            text-decoration: underline;
+        }
+        .article-meta {
+            font-size: 0.9em;
+            color: #828282;
+            margin-bottom: 10px;
+        }
+        .summary-section {
+            margin-top: 10px;
+            background-color: #e8e8e8;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .summary-section h3 {
+            margin-top: 0;
+            color: #ff6600;
+            font-size: 1em;
+        }
+        .pagination-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+        .pagination-controls button, .pagination-controls select {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #f0f0f0;
+            cursor: pointer;
+        }
+        .pagination-controls button:hover:not(:disabled) {
+            background-color: #e0e0e0;
+        }
+        .pagination-controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .pagination-controls span {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Hacker News AI/ML Summaries</h1>
+
+        <div class="pagination-controls">
+            <label for="per-page-select">Items per page:</label>
+            <select id="per-page-select" onchange="changePerPage()">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+            <button id="prev-page" onclick="changePage(-1)">Previous</button>
+            <span id="page-info">Page 1 of 1</span>
+            <button id="next-page" onclick="changePage(1)">Next</button>
+        </div>
+
+        <div id="articles-container">
+            <!-- Articles will be loaded here by JavaScript -->
+        </div>
+
+        <div class="pagination-controls">
+            <label for="per-page-select-bottom">Items per page:</label>
+            <select id="per-page-select-bottom" onchange="changePerPage()">
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+            </select>
+            <button id="prev-page-bottom" onclick="changePage(-1)">Previous</button>
+            <span id="page-info-bottom">Page 1 of 1</span>
+            <button id="next-page-bottom" onclick="changePage(1)">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let currentPerPage = 10;
+        let totalPages = 1;
+
+        function fetchArticles() {
+            const url = `/data?page=${currentPage}&per_page=${currentPerPage}`;
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    const articles = data.articles;
+                    totalPages = data.total_pages;
+                    currentPage = data.current_page;
+                    currentPerPage = data.per_page;
+
+                    const container = document.getElementById('articles-container');
+                    container.innerHTML = ''; // Clear existing articles
+                    if (articles.length === 0) {
+                        container.innerHTML = '<p>No AI/ML related articles found or processed yet. Please wait for the next update.</p>';
+                        return;
+                    }
+                    articles.forEach(article => {
+                        const articleDiv = document.createElement('div');
+                        articleDiv.classList.add('article');
+                        articleDiv.innerHTML = `
+                            <h2><a href="${article.link}" target="_blank">${article.title}</a></h2>
+                            <div class="article-meta">
+                                HN Score: ${article.score} | Comments: ${article.num_comments}
+                                ${article.comments_link ? `(<a href="${article.comments_link}" target="_blank">link</a>)` : ''}
+                                <br>
+                                Gemini Relevance: ${article.gemini_is_relevant ? 'True' : 'False'} | Gemini Score: ${article.gemini_relevance_score}
+                            </div>
+                            <div class="summary-section">
+                                <h3>Article Summary:</h3>
+                                <p>${article.article_summary}</p>
+                            </div>
+                            <div class="summary-section">
+                                <h3>Comments Summary:</h3>
+                                <p>${article.comments_summary}</p>
+                            </div>
+                        `;
+                        container.appendChild(articleDiv);
+                    });
+                    updatePaginationControls();
+                })
+                .catch(error => {
+                    console.error('Error fetching articles:', error);
+                    document.getElementById('articles-container').innerHTML = '<p>Error loading articles. Please try again later.</p>';
+                });
+        }
+
+        function updatePaginationControls() {
+            document.getElementById('page-info').textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('prev-page').disabled = currentPage === 1;
+            document.getElementById('next-page').disabled = currentPage === totalPages;
+            document.getElementById('per-page-select').value = currentPerPage;
+
+            // Update bottom pagination controls
+            document.getElementById('page-info-bottom').textContent = `Page ${currentPage} of ${totalPages}`;
+            document.getElementById('prev-page-bottom').disabled = currentPage === 1;
+            document.getElementById('next-page-bottom').disabled = currentPage === totalPages;
+            document.getElementById('per-page-select-bottom').value = currentPerPage;
+        }
+
+        function changePage(delta) {
+            const newPage = currentPage + delta;
+            if (newPage >= 1 && newPage <= totalPages) {
+                currentPage = newPage;
+                fetchArticles();
+            }
+        }
+
+        function changePerPage() {
+            currentPerPage = parseInt(document.getElementById('per-page-select').value);
+            currentPage = 1; // Reset to first page when changing items per page
+            fetchArticles();
+        }
+
+        // Fetch articles immediately on page load
+        fetchArticles();
+    </script>
+</body>
+</html>
