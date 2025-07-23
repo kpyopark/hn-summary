@@ -1,6 +1,5 @@
-Flask
+azure-functions
 requests
 beautifulsoup4
-APScheduler
 google-generativeai
 python-dotenv
