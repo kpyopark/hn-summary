@@ -24,20 +24,35 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     if per_page not in allowed_per_page:
         per_page = 10
 
-    # TODO: Replace with Cosmos DB call
-    # articles_from_db, total_articles = db_operations.get_articles(page, per_page)
-    articles_from_db = []
-    total_articles = 0
-    
-    total_pages = ceil(total_articles / per_page)
+    continuation_token = req.headers.get('x-ms-continuation-token', None)
 
-    response_data = {
-        'articles': articles_from_db,
-        'total_articles': total_articles,
-        'total_pages': total_pages,
-        'current_page': page,
-        'per_page': per_page
-    }
+    try:
+        articles_from_db, total_articles, new_continuation_token = db_operations.get_articles(page, per_page, continuation_token)
+        
+        total_pages = ceil(total_articles / per_page)
+
+        response_data = {
+            'articles': articles_from_db,
+            'total_articles': total_articles,
+            'total_pages': total_pages,
+            'current_page': page,
+            'per_page': per_page,
+            'continuation_token': new_continuation_token
+        }
+        
+        headers = {
+            "Content-Type": "application/json",
+            "x-ms-continuation-token": new_continuation_token if new_continuation_token else ""
+        }
+
+        return func.HttpResponse(
+            json.dumps(response_data),
+            headers=headers,
+            status_code=200
+        )
+    except Exception as e:
+        logging.error(f"Error fetching articles from Cosmos DB: {e}")
+        return func.HttpResponse("Error fetching articles.", status_code=500)
 
     return func.HttpResponse(
         json.dumps(response_data),

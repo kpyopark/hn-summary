@@ -1,0 +1,14 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: hn-summary-cline
+metadata:
+    template: azd-init@1.18.0
+services:
+    hn-summary-cline:
+        project: .
+        host: containerapp
+        language: python
+resources:
+    hn-summary-cline:
+        type: host.containerapp
+        port: 80

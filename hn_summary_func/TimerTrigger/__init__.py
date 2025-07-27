@@ -76,9 +76,8 @@ def main(mytimer: func.TimerRequest) -> None:
                 'timestamp': utc_timestamp
             }
 
-            # TODO: Replace with Cosmos DB call
-            # db_operations.save_article(article_data)
-            logging.info(f"  Article '{article['title']}' (ID: {article['id']}) successfully processed.")
+            db_operations.save_article(article_data)
+            logging.info(f"  Article '{article['title']}' (ID: {article['id']}) successfully processed and saved to Cosmos DB.")
             newly_processed_count += 1
 
         logging.info(f"Finished processing. Newly processed and saved articles: {newly_processed_count}.")
